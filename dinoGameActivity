@@ -1,149 +1,105 @@
-/*Activity 1
-Dino Game
-*/
+import pygame
+import random
 
-Dino game code
-#include <Adafruit_SSD1306.h>
+# Initialize
+pygame.init()
+screen = pygame.display.set_mode((128, 64))
+clock = pygame.time.Clock()
+font = pygame.font.SysFont("Arial", 12)
 
-// made by ultramegabombastiucfuze on https://projecthub.arduino.cc/
+# Game constants
+ground_y = 40
+dino_y = ground_y
+velocity = 0
+gravity = 2
+is_jumping = False
+game_over = False
+score = 0
+game_speed = 3
+last_speed_increase = pygame.time.get_ticks()
 
-#define BUTTON_PIN 3  // button pin 
+# Cactus positions
+cactus1_x = 128
+cactus2_x = 180
 
-// Game state variables
-bool isJumping = false;
-bool gameOver = false;
-int dinoY = 40;
-int velocity = 0;
-const int gravity = 2;
-const int groundY = 40;
-int cactusX1 = 128;
-int cactusX2 = 180;
-int gameSpeed = 3;
-unsigned long lastSpeedIncrease = 0;
-unsigned long lastFrame = 0;
-unsigned long score = 0;
+# Main loop
+running = True
+while running:
+    screen.fill((0, 0, 0))  # Black background
+    keys = pygame.key.get_pressed()
 
-// Button debounce state
-bool buttonPressed = false;
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
 
-Adafruit_SSD1306 display(128, 64, &Wire, -1);
+    if game_over:
+        text1 = font.render("Game Over", True, (255, 255, 255))
+        text2 = font.render("Press R to restart", True, (255, 255, 255))
+        screen.blit(text1, (30, 20))
+        screen.blit(text2, (10, 40))
+        pygame.display.flip()
 
-void setup() {
-    pinMode(BUTTON_PIN, INPUT_PULLUP);  // Enable internal pull-up
+        if keys[pygame.K_r]:
+            # Reset game
+            dino_y = ground_y
+            velocity = 0
+            is_jumping = False
+            game_over = False
+            cactus1_x = 128
+            cactus2_x = 180
+            score = 0
+            game_speed = 3
+            last_speed_increase = pygame.time.get_ticks()
+        clock.tick(60)
+        continue
 
-    if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-        while (1);
-    }
+    # Jumping
+    if keys[pygame.K_SPACE] and dino_y == ground_y:
+        is_jumping = True
+        velocity = -13
 
-    display.clearDisplay();
-    display.display();
-    randomSeed(analogRead(0));  // Randomize cactus spawn
-}
+    # Physics
+    if is_jumping:
+        dino_y += velocity
+        velocity += gravity
+        if dino_y >= ground_y:
+            dino_y = ground_y
+            is_jumping = False
 
-void loop() {
-    unsigned long currentTime = millis();
-    if (currentTime - lastFrame < 50) return;
-    lastFrame = currentTime;
+    # Move cacti
+    cactus1_x -= game_speed
+    cactus2_x -= game_speed
 
-    int buttonState = digitalRead(BUTTON_PIN);
+    if cactus1_x < -10:
+        cactus1_x = 128 + random.randint(0, 40)
+        if random.randint(0, 10) > 6:
+            cactus2_x = cactus1_x + random.randint(15, 30)
+    if cactus2_x < -10:
+        cactus2_x = 128 + random.randint(30, 60)
 
-    // --- GAME OVER & RESTART HANDLING ---
-    if (gameOver) {
-        if (buttonState == HIGH && !buttonPressed) {
-            buttonPressed = true;
-        }
+    # Speed up
+    if pygame.time.get_ticks() - last_speed_increase > 3000:
+        game_speed += 1
+        last_speed_increase = pygame.time.get_ticks()
 
-        if (buttonState == LOW && buttonPressed) {
-            buttonPressed = false;
-            resetGame();
-        }
+    # Collision
+    hit1 = (5 < cactus1_x < 20 and dino_y == ground_y)
+    hit2 = (5 < cactus2_x < 20 and dino_y == ground_y)
+    if hit1 or hit2:
+        game_over = True
 
-        return;
-    }
+    # Draw dino, cacti, ground
+    pygame.draw.rect(screen, (255, 255, 255), (10, dino_y, 10, 10))  # Dino
+    pygame.draw.rect(screen, (255, 255, 255), (cactus1_x, ground_y, 10, 15))  # Cactus 1
+    pygame.draw.rect(screen, (255, 255, 255), (cactus2_x, ground_y, 10, 15))  # Cactus 2
+    pygame.draw.line(screen, (255, 255, 255), (0, 58), (128, 58))  # Ground
 
-    // --- JUMP HANDLING ---
-    if (buttonState == HIGH && !buttonPressed && dinoY == groundY) {
-        buttonPressed = true;
-        isJumping = true;
-        velocity = -13;
-    }
-    if (buttonState == LOW) {
-        buttonPressed = false;
-    }
+    # Score
+    score += 1
+    text = font.render(f"Score: {score // 10}", True, (255, 255, 255))
+    screen.blit(text, (0, 0))
 
-    // --- PHYSICS ---
-    if (isJumping) {
-        dinoY += velocity;
-        velocity += gravity;
-        if (dinoY >= groundY) {
-            dinoY = groundY;
-            isJumping = false;
-        }
-    }
+    pygame.display.flip()
+    clock.tick(20)  # ~50ms per frame (20 fps)
 
-    // --- MOVE CACTI ---
-    cactusX1 -= gameSpeed;
-    cactusX2 -= gameSpeed;
-
-    if (cactusX1 < -10) {
-        cactusX1 = 128 + random(0, 40);
-        if (random(0, 10) > 6) cactusX2 = cactusX1 + random(15, 30);
-    }
-    if (cactusX2 < -10) {
-        cactusX2 = 128 + random(30, 60);
-    }
-
-    // --- SPEED UP ---
-    if (currentTime - lastSpeedIncrease > 3000) {
-        gameSpeed++;
-        lastSpeedIncrease = currentTime;
-    }
-
-    // --- SCORE ---
-    score++;
-
-    // --- DRAW SCENE ---
-    display.clearDisplay();
-    display.fillRect(10, dinoY, 10, 10, SSD1306_WHITE);        // Dino
-    display.fillRect(cactusX1, groundY, 10, 15, SSD1306_WHITE); // Cactus 1
-    display.fillRect(cactusX2, groundY, 10, 15, SSD1306_WHITE); // Cactus 2
-    display.drawLine(0, 58, 128, 58, SSD1306_WHITE);            // Ground
-    display.setTextSize(1);
-    display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, 0);
-    display.print("Score: ");
-    display.print(score / 10);
-    display.display();
-
-    // --- COLLISION DETECTION ---
-    bool hitCactus1 = (cactusX1 < 20 && cactusX1 > 5 && dinoY == groundY);
-    bool hitCactus2 = (cactusX2 < 20 && cactusX2 > 5 && dinoY == groundY);
-
-    if (hitCactus1 || hitCactus2) {
-        gameOver = true;
-        display.clearDisplay();
-        display.setTextSize(2);
-        display.setCursor(20, 20);
-        display.print("Game Over");
-        display.setTextSize(1);
-        display.setCursor(10, 45);
-        display.print("Press to restart");
-        display.display();
-    }
-}
-
-// --- RESTART GAME FUNCTION ---
-void resetGame() {
-    isJumping = false;
-    dinoY = groundY;
-    velocity = 0;
-    cactusX1 = 128;
-    cactusX2 = 180;
-    gameSpeed = 3;
-    score = 0;
-    gameOver = false;
-    lastSpeedIncrease = millis();
-    lastFrame = millis();
-    display.clearDisplay();
-    display.display();
-}
+pygame.quit()
