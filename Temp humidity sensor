@@ -1,0 +1,58 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
+
+// Pin where the DHT11 data line is connected
+#define DHTPIN 6      // Match schematic
+
+// DHT type
+#define DHTTYPE DHT11
+
+// Initialize DHT sensor
+DHT dht(DHTPIN, DHTTYPE);
+
+// Initialize LCD: address 0x27, 16 chars, 2 lines
+LiquidCrystal_I2C lcd(0x27, 16, 2); 
+
+void setup() {
+  Serial.begin(9600);
+  dht.begin();
+
+  lcd.begin(16, 2);
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Reading DHT11...");
+}
+
+void loop() {
+  delay(2000);  // DHT11 has slow refresh
+
+  float h = dht.readHumidity();
+  float t = dht.readTemperature(); // Celsius
+
+  if (isnan(h) || isnan(t)) {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Sensor error!");
+    return;
+  }
+
+  // Display values on LCD
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Temp: ");
+  lcd.print(t, 1);
+  lcd.print((char)223);  // degree symbol
+  lcd.print("C");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Humidity: ");
+  lcd.print(h, 0);
+  lcd.print("%");
+
+  // Also print to Serial Monitor (optional)
+  Serial.print("Temp: "); Serial.print(t);
+  Serial.print(" °C  Humidity: "); Serial.print(h); Serial.println(" %");
+}
