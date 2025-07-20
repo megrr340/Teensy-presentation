@@ -1,0 +1,58 @@
+const int ledPin = 9;
+const int button1Pin = 2;
+const int button2Pin = 3;
+
+
+unsigned long ledOnTime;
+bool ledOn = false;
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  pinMode(button1Pin, INPUT_PULLUP);
+  pinMode(button2Pin, INPUT_PULLUP);
+ 
+
+  Serial.begin(9600);
+  randomSeed(analogRead(A0));
+
+  Serial.println("Press any button to begin.");
+}
+
+void loop() {
+  // Wait for either player to press to start
+  while (digitalRead(button1Pin) == HIGH && digitalRead(button2Pin) == HIGH); //for this code HIGH=NOT PRESSED and LOW=PRESSED, which do we want for this while loop?
+  Serial.println("Button Pressed starting game");
+
+  // Reset and prepare
+  digitalWrite(<your code>); //For the LED HIGH=ON and LOW=OFF, How do we specify which pin we want to communicate with to  control the LED?
+  delay(random(<your code minimum and maximum wait times>//));  // Random delay. set the time range that the light can go off in
+
+  // Light turns on: start the timer
+  digitalWrite(<your code>); 
+
+  ledOnTime = millis();//this is the time the LED turns on
+  ledOn = true;
+
+  // Wait for a button to be pressed
+  while (true) {
+    if (digitalRead(button1Pin) == LOW) {
+      unsigned long reaction = <your code here> //reaction time = current time - time LED turned on
+      //print out who the winner is and what their reaction time was 
+
+      Serial.println(" ms"); //unit of time
+      break;
+    }
+    if (digitalRead(button2Pin) == <which button setting?>) {
+      unsigned long reaction = <your code here> //reaction time = current time - time LED turned on
+      //print out who the winner is and what their reaction time was 
+      Serial.println(" ms");
+      break;
+    }
+  }
+
+  digitalWrite(ledPin, <Which button setting?>);
+
+  delay(2000);  // Cooldown
+  Serial.println("Press any button to play again...");
+}
+
