@@ -1,0 +1,57 @@
+const int ledPin = 9;
+const int button1Pin = 2;
+const int button2Pin = 3;
+const int buzzerPin = 8;  // Optional
+
+unsigned long ledOnTime;
+bool ledOn = false;
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  pinMode(button1Pin, INPUT_PULLUP);
+  pinMode(button2Pin, INPUT_PULLUP);
+
+
+  Serial.begin(9600);
+  randomSeed(analogRead(A0));
+
+  Serial.println("Press any button to begin.");
+}
+
+void loop() {
+  // Wait for either player to press to start
+  while (digitalRead(button1Pin) == HIGH && digitalRead(button2Pin) == HIGH);
+
+  // Reset and prepare
+  digitalWrite(ledPin, LOW);
+  delay(random(2000, 5000));  // Random delay
+
+  // Light turns on: start the timer
+  digitalWrite(ledPin, HIGH);
+
+  ledOnTime = millis();
+  ledOn = true;
+
+  // Wait for a button to be pressed
+  while (true) {
+    if (digitalRead(button1Pin) == LOW) {
+      unsigned long reaction = millis() - ledOnTime;
+      Serial.print("Player 1 wins! Reaction time: ");
+      Serial.print(reaction);
+      Serial.println(" ms");
+      break;
+    }
+    if (digitalRead(button2Pin) == LOW) {
+      unsigned long reaction = millis() - ledOnTime;
+      Serial.print("Player 2 wins! Reaction time: ");
+      Serial.print(reaction);
+      Serial.println(" ms");
+      break;
+    }
+  }
+
+  digitalWrite(ledPin, LOW);
+
+  delay(2000);  // Cooldown
+  Serial.println("Press any button to play again...");
+}
