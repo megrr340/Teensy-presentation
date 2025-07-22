@@ -20,7 +20,7 @@ void setup() {
 
 void loop() {
   // Wait for either player to press to start
-  while (digitalRead(button1Pin) == HIGH && digitalRead(button2Pin) == HIGH); //for this code HIGH=NOT PRESSED and LOW=PRESSED, which do we want for this while loop?
+  while (digitalRead(button1Pin) == <YOUR CODE HERE> && digitalRead(button2Pin) == <YOUR CODE HERE>); //for this code HIGH=NOT PRESSED and LOW=PRESSED, which do we want for this while loop?
   Serial.println("Button Pressed starting game");
 
   // Reset and prepare
