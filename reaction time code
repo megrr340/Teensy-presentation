@@ -28,7 +28,7 @@ void loop() {
   delay(random(<your code minimum and maximum wait times>//));  // Random delay. set the time range that the light can go off in
 
   // Light turns on: start the timer
-  digitalWrite(<your code>); 
+  digitalWrite(<your code>); //turn on LED
 
   ledOnTime = millis();//this is the time the LED turns on
   ledOn = true;
